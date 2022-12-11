@@ -1,28 +1,28 @@
-PN10  
+PN10
 
 Data Sampling Rate: 512 Hz
 
 Channels in EDF files:
-Channel 1: Fp1      
-Channel 2: F3      
-Channel 3: C3      
-Channel 4: P3      
-Channel 5: 1      
-Channel 6: F7      
-Channel 7: T3      
-Channel 8: T5      
-Channel 14: Fz      
-Channel 15: Cz      
-Channel 16: Pz      
-Channel 17: F4      
-Channel 18: C4      
-Channel 19: P4      
-Channel 20: O2      
-Channel 21: F8      
-Channel 22: T4       
-Channel 23: T6      
-Channel 32: EKG 1    
-Channel 33: EKG 2    
+Channel 1: Fp1
+Channel 2: F3
+Channel 3: C3
+Channel 4: P3
+Channel 5: 1
+Channel 6: F7
+Channel 7: T3
+Channel 8: T5
+Channel 14: Fz
+Channel 15: Cz
+Channel 16: Pz
+Channel 17: F4
+Channel 18: C4
+Channel 19: P4
+Channel 20: O2
+Channel 21: F8
+Channel 22: T4
+Channel 23: T6
+Channel 32: EKG 1
+Channel 33: EKG 2
 Channel 34: Fp2
 
 
@@ -31,7 +31,7 @@ Seizure n 1 (seizure 1A):
 File name: PN10-1.edf
 Registration start time: 05.40.05
 Registration end time: 08.26.07
-Seizure start time: 07.45.50 
+Seizure start time: 07.45.50
 Seizure end time: 07.46.59
 
 
@@ -49,7 +49,7 @@ Seizure n 3 (seizure B2):
 File name: PN10-3.edf
 Registration start time: 13.33.18
 Registration end time: 15.58.31
-Seizure start time: 15.43.53 (CLINICAL ONSET); 15.43.59 (ELECTRIC ONSET)  
+Seizure start time: 15.43.53 (CLINICAL ONSET); 15.43.59 (ELECTRIC ONSET)
 Seizure end time: 15.45.02
 
 
@@ -58,8 +58,8 @@ Seizure n 4 (seizure B3):
 File name: PN10-4.5.6.edf
 Registration start time: 12.11.21
 Registration end time: 16.48.49
-Seizure start time: 12.49.50 
-Seizure end time: 12.49.55  
+Seizure start time: 12.49.50
+Seizure end time: 12.49.55
 
 
 
@@ -67,8 +67,8 @@ Seizure n 5 (B4):
 File name: PN10-4.5.6.edf
 Registration start time: 12.11.21
 Registration end time: 16.48.49
-Seizure start time: 14.00.25 
-Seizure end time: 14.00.44 
+Seizure start time: 14.00.25
+Seizure end time: 14.00.44
 
 
 
@@ -77,7 +77,7 @@ File name: PN10-4.5.6.edf
 Registration start time: 12.11.21
 Registration end time: 16.48.49
 Seizure start time: 15.18.26 (CLINICAL ONSET)
-Seizure end time: 15.19.23 
+Seizure end time: 15.19.23
 
 
 

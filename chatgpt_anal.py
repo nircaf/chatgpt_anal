@@ -33,7 +33,7 @@ def eeg_dft_array_w_fft(eeg_recording,seizures, window_size=1.0):
     # Initialize the array that will store the DFT of the recording
     num_channels = eeg_recording.info['nchan']
     dft_array = np.zeros((batch_size, num_channels,window_size_samples), dtype=np.float64)
-    labels = np.zeros(( batch_size), dtype=np.float64)
+    labels = np.zeros(( batch_size), dtype=np.int64)
     # get the raw data
     raw_data = eeg_recording.get_data()
     # seizure start and end time array
