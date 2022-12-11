@@ -1,0 +1,63 @@
+PN09 
+
+Data Sampling Rate: 512 Hz
+
+Channels in EDF files:
+Channel 1: Fp1      
+Channel 2: F3      
+Channel 3: C3      
+Channel 4: P3      
+Channel 5: 1      
+Channel 6: F7      
+Channel 7: T3      
+Channel 8: T5      
+Channel 9: Fc1      
+Channel 10: Fc5      
+Channel 11: Cp1      
+Channel 12: Cp5      
+Channel 13: F9      
+Channel 14: Fz      
+Channel 15: Cz      
+Channel 16: Pz      
+Channel 17: F4      
+Channel 18: C4      
+Channel 19: P4      
+Channel 20: O2      
+Channel 21: F8      
+Channel 22: T4       
+Channel 23: T6      
+Channel 24: Fc2      
+Channel 25: Fc6      
+Channel 26: Cp2      
+Channel 27: Cp6      
+Channel 28: F10      
+Channel 32: EKG 1    
+Channel 33: EKG 2    
+Channel 34: Fp2
+
+
+
+Seizure n 1:
+File name: PN09-1.edf
+Registration start time: 14.08.54
+Registration end time: 16.26.07
+Seizure start time: 16.09.43 
+Seizure end time: 16.11.03 
+
+
+
+Seizure n 2:
+File name: PN09-2.edf
+Registration start time: 15.02.09
+Registration end time: 17.21.02
+Seizure start time: 17.00.56
+Seizure end time: 17.01.55
+
+
+
+Seizure n 3:
+File name: PN09-3.edf
+Registration start time: 14.20.23
+Registration end time: 16.34.28
+Seizure start time: 16.20.44 
+Seizure end time: 16.21.48

@@ -1,0 +1,69 @@
+PN12
+
+Data Sampling Rate: 512 Hz
+
+Channels in EDF files:
+Channel 1: Fp1      
+Channel 2: F3      
+Channel 3: C3      
+Channel 4: P3      
+Channel 5: 1      
+Channel 6: F7      
+Channel 7: T3      
+Channel 8: T5      
+Channel 9: Fc1      
+Channel 10: Fc5      
+Channel 11: Cp1      
+Channel 12: Cp5      
+Channel 13: F9      
+Channel 14: Fz      
+Channel 15: Cz      
+Channel 16: Pz      
+Channel 17: F4      
+Channel 18: C4      
+Channel 19: P4      
+Channel 20: O2      
+Channel 21: F8      
+Channel 22: T4       
+Channel 23: T6      
+Channel 24: Fc2      
+Channel 25: Fc6      
+Channel 26: Cp2      
+Channel 27: Cp6      
+Channel 28: F10      
+Channel 32: EKG 1    
+Channel 33: EKG 2    
+Channel 34: Fp2      
+
+
+
+Seizure n 1:
+File name: PN12-1.2.edf
+Registration start time: 15.51.31
+Registration end time: 18.34.25
+Seizure start time: 16:13.23 
+Seizure end time: 16.14.26  
+
+
+Seizure n 2: 
+File name: PN12-1.2.edf
+Seizure start time: 18.31.01 
+Seizure end time: 18.32.09
+
+
+
+Seizure n 3:
+File name: PN12-3.edf 
+Registration start time: 08.42.35
+Registration end time: 09.15.44  
+Seizure start time: 08.55.27 
+Seizure end time: 08.57.03
+
+
+
+Seizure n 4:
+File name: PN12-4.edf 
+Registration start time: 15.59.19
+Registration end time: 18.49.13  
+Seizure start time: 18.42.51
+Seizure end time:18.43.54

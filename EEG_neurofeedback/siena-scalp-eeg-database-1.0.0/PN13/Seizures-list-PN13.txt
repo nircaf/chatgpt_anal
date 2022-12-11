@@ -1,0 +1,61 @@
+PN13
+
+Data Sampling Rate: 512 Hz
+
+Channels in EDF files:
+Channel 1: Fp1      
+Channel 2: F3      
+Channel 3: C3      
+Channel 4: P3      
+Channel 5: 1      
+Channel 6: F7      
+Channel 7: T3      
+Channel 8: T5      
+Channel 9: Fc1      
+Channel 10: Fc5      
+Channel 11: Cp1      
+Channel 12: Cp5      
+Channel 13: F9      
+Channel 14: Fz      
+Channel 15: Cz      
+Channel 16: Pz      
+Channel 17: F4      
+Channel 18: C4      
+Channel 19: P4      
+Channel 20: O2      
+Channel 21: F8      
+Channel 22: T4      
+Channel 23: T6      
+Channel 24: Fc2      
+Channel 25: Fc6      
+Channel 26: Cp2      
+Channel 27: Cp6      
+Channel 28: F10      
+Channel 32: EKG 1    
+Channel 33: EKG 2    
+Channel 34: Fp2      
+
+
+
+Seizure n 1 (= seizure 1):
+File name: PN13-1.edf  
+Registration start time: 08.24.28
+Registration end time: 11.00.23
+Seizure start time: 10.22.10
+Seizure end time: 10.22.58 
+
+
+Seizure n 2 (= seizure 2):
+File name: PN13-2.edf 
+Registration start time: 06.55.02
+Registration end time: 09.30.14
+Seizure start time: 08.55.51
+Seizure end time: 08.56.56
+
+
+Seizure n 3 (= seizure 3):
+File name: PN13-3.edf  
+Registration start time: 12.00.01
+Registration end time: 15.28.48
+Seizure start time: 14.05.54
+Seizure end time: 14.08.25

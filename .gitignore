@@ -1,0 +1,8 @@
+/gitignore/**
+**.sh
+**.csv
+**.xlsx
+**.sql
+**.logs
+**.csv
+**.edf
