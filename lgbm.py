@@ -35,9 +35,6 @@ import pickle
 import os
 from sklearn.model_selection import GridSearchCV
 
-with open('Nir_scripts/config.json', 'r') as f:
-    nir_config = json.load(f)
-
 subplot_num = 3
 ranodm_state = 42
 n_estimators = 2000
@@ -87,9 +84,6 @@ def plot_sklearn(model, X_train, X_test, y_train, y_test, title):
     #   lgb.plot_importance(model,title=f'plot_importance')
     #   lgb.plot_metric(model,title=f'Plot metric')
     #   lgb.plot_tree(model,figsize=(30,40))
-    disp = metrics.plot_confusion_matrix(
-        model, X_test, y_test, cmap='Blues_r', display_labels=nir_config['num_to_actions'])
-    disp.ax_.set_title(title)
     print(metrics.classification_report(y_test, model.predict(X_test)))
 
 def set_params(x_train, x_test, y_train, y_test,model = None,args= None):
@@ -103,7 +97,7 @@ def set_params(x_train, x_test, y_train, y_test,model = None,args= None):
         'class_weight': class_weights,
     }
     # model.set_params(**params)
-    return params 
+    return params
 
 def ensemble_model_all(X_train, X_test, y_train, y_test):
     # Fit all models
@@ -114,19 +108,13 @@ def ensemble_model_all(X_train, X_test, y_train, y_test):
     plot_all_models(models,lazy = True)
 
 def ensemble_model(x_train, x_test, y_train, y_test, args = None):
-    class_dist = y_train.value_counts().to_dict()
-    class_weights = {}
-    for c_item in class_dist.items():
-        class_weights[c_item[0]] = sum(
-            class_dist.values()) / ((x_train.shape[1]) * c_item[1])
-    params = set_params(x_train, x_test, y_train, y_test)
     knn = KNeighborsClassifier()
-    svc = LinearSVC(**params,multi_class='crammer_singer')
-    lr = LogisticRegression(**params)
-    dt = DecisionTreeClassifier(**params)
+    svc = LinearSVC()
+    lr = LogisticRegression()
+    dt = DecisionTreeClassifier()
     gnb = GaussianNB()
-    rfc = RandomForestClassifier(**params)
-    xgb = XGBClassifier(**params)
+    rfc = RandomForestClassifier()
+    xgb = XGBClassifier()
     gbc = GradientBoostingClassifier()
     ada = AdaBoostClassifier()
     # -------------------------------------------------------------------
@@ -189,8 +177,6 @@ def ensemble_model(x_train, x_test, y_train, y_test, args = None):
         plt.figure(figsize=(10, 40))
         plt.subplot(911)
         plt.title(f'{name} accuracy cross val: {sc*100}%')
-        sns.heatmap(cm, annot=True, yticklabels=nir_config['num_to_actions'],
-                    xticklabels=False, cmap='YlGnBu')
     plot_all_models(Model,cv)
     # save model to file
     cv = np.where(np.isnan(cv), 0, cv) # replace nan with 0
@@ -201,7 +187,7 @@ def ensemble_model(x_train, x_test, y_train, y_test, args = None):
     else:
         pickle.dump(models[np.argmax(cv)][-1] , open(os.path.join('saved_models',
             'model_exp'  + '.pickle'), 'wb'))
-    
+
 
 
 def plot_all_models(Model,cv= None,lazy=False):
@@ -253,7 +239,7 @@ def ensemble_model_grid_search(x_train, x_test, y_train, y_test):
     cv = []
     for name, model in models:
         print('*****************', name, '*******************')
-        print('\n')  
+        print('\n')
         params = set_params(x_train, x_test, y_train, y_test, model)
         Model.append(name)
         model.fit(x_train, y_train)
@@ -277,8 +263,6 @@ def ensemble_model_grid_search(x_train, x_test, y_train, y_test):
         plt.figure(figsize=(10, 40))
         plt.subplot(911)
         plt.title(f'{name} accuracy cross val: {sc*100}%')
-        sns.heatmap(cm, annot=True, yticklabels=nir_config['num_to_actions'],
-                    xticklabels=False, cmap='YlGnBu')
     plt.figure(figsize=(10, 40))
     plt.subplot(911)
     plt.title(f'all models comparison')
