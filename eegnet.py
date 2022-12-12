@@ -65,7 +65,6 @@ If you have met any problems, you can contact Dr. Cui Jian at cuij0006@ntu.edu.s
 class InterpretableCNN(torch.nn.Module):
     def __init__(self, classes=2, sampleChannel=30, sampleLength=384 ,N1=16, d=2,kernelLength=64):
         super(InterpretableCNN, self).__init__()
-
         # model layers
         self.pointwise = torch.nn.Conv2d(1,N1,(sampleChannel,1))
         self.depthwise = torch.nn.Conv2d(N1,d*N1,(1,kernelLength),groups=N1)
@@ -73,9 +72,8 @@ class InterpretableCNN(torch.nn.Module):
         self.batchnorm = torch.nn.BatchNorm2d(d*N1,track_running_stats=False)
         self.GAP=torch.nn.AvgPool2d((1, sampleLength-kernelLength+1))
         self.fc = torch.nn.Linear(d*N1, classes)
-        self.softmax=torch.nn.LogSoftmax(dim=1)
-
-
+        # self.softmax=torch.nn.LogSoftmax(dim=1)
+        self.softmax=torch.nn.Softmax(dim=1)
         # parameters for the interpretation techniques
         self.activ_in=0
         self.activ_out=0
@@ -1006,6 +1004,9 @@ def run():
         # select the deep learning model to be used
                 my_net = InterpretableCNN(sampleChannel=channelnum).double().cuda()
                 # my_net = EEGNet(channelnum=channelnum).double().cuda()
+                # import compactcnn
+                # my_net = compactcnn.CompactCNN(classes=2 ,channels=channelnum,kernelLength=sf//6,sampleLength=sf).double().cuda()
+
 
                 for p in my_net.parameters():
                     p.requires_grad = True
@@ -1034,17 +1035,20 @@ def run():
                     print("Epoch {} - Loss: {:.4f}".format(epoch, err.detach().item()))
 
                 my_net.eval()
+                results = []
                 with torch.no_grad():
                     for j, x_test in enumerate(test, 0):
-                        x_test, labels = data
-                        x_test =  torch.DoubleTensor(x_test).cuda()
-                        answer = my_net(x_test)
-                        probs=np.round(np.exp(answer.cpu().detach().numpy())).astype(int)
+                        x_test, y_test = data
+                        answer = my_net(x_test.cuda())
+                        probs=np.exp(answer.cpu().detach().numpy())
                         # Calculate the accuracy of the model
-                        accuracy = accuracy_score(labels, probs)
-                        # Print the accuracy
-                        print(accuracy)
+                        preds       = probs.argmax(axis = -1)
+                        acc=accuracy_score(y_test, preds)
 
+                        print(acc)
+                        results.append(acc)
+
+                print('mean accuracy:',np.mean(results))
                 sampleVis =VisTech(my_net)
 
             torch.cuda.empty_cache()

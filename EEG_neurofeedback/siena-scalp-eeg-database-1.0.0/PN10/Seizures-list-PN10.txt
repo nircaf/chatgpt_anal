@@ -83,7 +83,7 @@ Seizure end time: 15.19.23
 
 Seizure n 7 (seizure B7):
 File name: PN10-7.8.9.edf
-Registration start time:1 6.49.25
+Registration start time:1 16.49.25
 Registration end time: 20.58.40
 Seizure start time: 17.35.13
 Seizure end time: 17.36.01

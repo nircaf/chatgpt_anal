@@ -180,13 +180,8 @@ def ensemble_model(x_train, x_test, y_train, y_test, args = None):
     plot_all_models(Model,cv)
     # save model to file
     cv = np.where(np.isnan(cv), 0, cv) # replace nan with 0
-    if args.adjusthp:
-        pickle.dump(models[np.argmax(cv)][-1] , open(os.path.join('saved_models',
-                'model_exp' + '_adjusthp_'  + '.pickle'), 'wb'))
-        print('HAND Model saved to file')
-    else:
-        pickle.dump(models[np.argmax(cv)][-1] , open(os.path.join('saved_models',
-            'model_exp'  + '.pickle'), 'wb'))
+    pickle.dump(models[np.argmax(cv)][-1] , open(os.path.join('saved_models',
+        'model_exp'  + '.pickle'), 'wb'))
 
 
 

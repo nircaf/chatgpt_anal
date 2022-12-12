@@ -10,6 +10,8 @@ import re
 from torch.utils.data import Dataset, DataLoader,random_split
 import torch.nn as nn
 import torch.nn.functional as F
+from sklearn.metrics import accuracy_score
+
 def eeg_dft_generator(eeg_recording, window_size=1.0):
     # Convert the window size from seconds to the number of samples in the recording
     window_size_samples = int(window_size * eeg_recording.sampling_rate)
@@ -20,11 +22,18 @@ def eeg_dft_generator(eeg_recording, window_size=1.0):
         dft = np.fft.fft(window)
         yield dft
 
-def seizures_start_time(seizures,dict_key='Seizure start time'):
+def seizures_start_time_arr(seizures,dict_key='Seizure start time'):
     arr = []
     for i in seizures:
         arr.append(seizures[i][dict_key])
     return np.array(arr)
+
+def seizures_start_time(seizures,dict_key='Seizure start time'):
+    df = pd.DataFrame()
+    for i in seizures:
+        df = pd.concat([df,pd.Series(seizures[i][dict_key])])
+    # remove duplicates
+    return df.drop_duplicates().to_numpy()
 
 def eeg_dft_array_w_fft(eeg_recording,seizures, window_size=1.0):
     # Convert the window size from seconds to the number of samples in the recording
@@ -56,6 +65,7 @@ def eeg_dft_array_w_fft(eeg_recording,seizures, window_size=1.0):
     dft_array_dataset = EEGDataset(dft_array, labels)
     return dft_array, labels
 
+import pandas as pd
 def eeg_dft_array(eeg_recording,seizures, window_size=1.0):
     # Convert the window size from seconds to the number of samples in the recording
     window_size_samples = int(window_size * eeg_recording.info['sfreq'])
@@ -63,22 +73,25 @@ def eeg_dft_array(eeg_recording,seizures, window_size=1.0):
     # Initialize the array that will store the DFT of the recording
     num_channels = eeg_recording.info['nchan']
     dft_array = np.zeros((batch_size, num_channels,window_size_samples), dtype=np.float64)
-    # get the raw data
-    raw_data = eeg_recording.get_data()
-    labels = np.zeros(raw_data.shape[1], dtype=np.int64)
-
+    # get raw data index to channel names
+    raw_data = pd.DataFrame(eeg_recording.get_data(),index = eeg_recording.ch_names)
     # seizure start and end time array
     seizures_start_time_arr = seizures_start_time(seizures)*eeg_recording.info['sfreq']
     seizures_end_time_arr = seizures_start_time(seizures,dict_key='Seizure end time')*eeg_recording.info['sfreq']
-    # run over labels and set 1 if there is a seizure
-    for i in range(raw_data.shape[1]):
-        for seizure in range(len(seizures_start_time_arr)):
-            if i >= seizures_start_time_arr[seizure] and i <= seizures_end_time_arr[seizure]:
-                labels[i] = 1
-                break
+    # Registration start and end time array
+    registration_start_time_arr = seizures_start_time(seizures,dict_key='Registration start time')*eeg_recording.info['sfreq']
+    registration_end_time_arr = seizures_start_time(seizures,dict_key='Registration end time')*eeg_recording.info['sfreq']
+    # get raw_data of registration time
+    seizures_data = pd.DataFrame(index = eeg_recording.ch_names)
+    for i in range(len(registration_start_time_arr)):
+        seizures_data = pd.concat([seizures_data,raw_data.iloc[:,int(registration_start_time_arr[i][0]):int(registration_end_time_arr[i][0])]],ignore_index=True,axis=1)
+    labels = np.zeros(seizures_data.shape[1], dtype=np.int64)
+    # set labels to 1 for seizure time
+    zero_index_location = min(registration_start_time_arr)[0]
+    for i in range(len(seizures_start_time_arr)):
+        labels[int(seizures_start_time_arr[i][0]-zero_index_location):int(seizures_end_time_arr[i][0]-zero_index_location)] = 1
     # unsqueeze the dft_array to add a channel dimension
-    dft_array_dataset = EEGDataset(raw_data, labels)
-    return raw_data, labels
+    return seizures_data, labels
 
 class EEGDataset(Dataset):
     def __init__(self, data, labels):
@@ -202,25 +215,39 @@ class EEGClassifier(nn.Module):
         x = self.fc1(x)
         x = torch.relu(x)
         x = self.fc2(x)
-
         return x
+
+class BinaryClassifier(torch.nn.Module):
+    def __init__(self, input_size, hidden_size, output_size):
+        super(BinaryClassifier, self).__init__()
+        self.fc1 = torch.nn.Linear(input_size, hidden_size)
+        self.relu = torch.nn.ReLU()
+        self.fc2 = torch.nn.Linear(hidden_size, output_size)
+
+    def forward(self, x):
+        out = self.fc1(x)
+        out = self.relu(out)
+        out = self.fc2(out)
+        return out
+
 
 def classify_eeg_dft(dft_array_dataset,n_channels,sfreq):
     # Use the GPU if it is available
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    n_channels = dft_array_dataset.data.shape[1]
     # Split the dataset into train and test sets
     train_dataset, test_dataset = random_split(dft_array_dataset, [0.8, 0.2])
 
-    batch_size = 10
+    batch_size = n_channels
     # Create DataLoaders to feed the data to the model in batches
     train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
     test_dataloader = DataLoader(test_dataset, batch_size=batch_size, shuffle=True)
 
     # Define the model
-    model = SleepStagerChambon2018(n_channels, sfreq).to(device)
+    model = BinaryClassifier(n_channels, n_channels*2,1).to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
 
-    num_epochs = 10
+    num_epochs = 100
     # Train the model
     for epoch in range(num_epochs):
         for x_batch, y_batch in train_dataloader:
@@ -233,20 +260,32 @@ def classify_eeg_dft(dft_array_dataset,n_channels,sfreq):
             loss.backward()
             # Update the model parameters
             optimizer.step()
+            # print loss
+        print("Epoch {} - Loss: {:.4f}".format(epoch, loss.detach().item()))
 
     # Evaluate the model on the test data
     model.eval()
+    results = []
     with torch.no_grad():
-        for x_batch, y_batch in test_dataloader:
-            # Perform a forward pass on the batch of data
-            predictions = model(x_batch)
-
+        for j, data in enumerate(test_dataloader, 0):
+            x_test, y_test = data
+            answer = model(x_test.cuda())
+            probs=np.exp(answer.cpu().detach().numpy())
+            # Calculate the accuracy of the model
+            preds = probs.argmax(axis = -1)
+            acc=accuracy_score(y_test, preds)
+            print(acc)
+            results.append(acc)
+    print('mean accuracy:',np.mean(results))
+    torch.save(model, r'saved_models')
     return model
+
 
 def loss_fn(outputs, labels):
     return torch.nn.functional.binary_cross_entropy_with_logits(outputs, labels)
 
 def process_and_plot_eeg_files(directory, seizures):
+
     # Use glob to find all the .edf files in the directory and its subdirectories
     file_pattern = f'{directory}/*.edf'
     filenames = glob.glob(file_pattern, recursive=True)
@@ -254,9 +293,34 @@ def process_and_plot_eeg_files(directory, seizures):
     # Load each .edf file and process it using the eeg_dft_array and classify_eeg_dft functions
     for filename in filenames:
         eeg_recording = mne.io.read_raw_edf(filename)
-        dft_array_dataset = eeg_dft_array(eeg_recording,seizures)
+        seizures_data, labels = eeg_dft_array(eeg_recording,seizures)
+        dft_array_dataset = prep_seizures_data_labels(seizures_data, labels)
+        # labels = classify_eeg_dft_fft(seizures_data, eeg_recording.info['nchan'], eeg_recording.info['sfreq'])
         labels = classify_eeg_dft(dft_array_dataset, eeg_recording.info['nchan'], eeg_recording.info['sfreq'])
 
+def prep_seizures_data_labels(seizures_data, labels):
+    # Use the GPU if it is available
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    seizures_data = torch.tensor(seizures_data.T.values).to(device).float()
+    labels = torch.tensor(labels.values).to(device).float()
+    dft_array_dataset = EEGDataset(seizures_data, labels)
+    return dft_array_dataset
+
+def classify_eeg_dft_fft(seizures_data, n_channels, s_freq):
+    # Compute the DFT of the seizures data
+    dft_array = torch.fft.fft(seizures_data)
+
+    # Select the frequencies of interest (up to the Nyquist frequency)
+    nyquist_freq = s_freq / 2
+    freq_idx = dft_array.abs().max(dim=1)[0] >= nyquist_freq
+
+    # Compute the average power spectrum across channels
+    avg_power_spectrum = dft_array[:, freq_idx].mean(dim=1)
+
+    # Classify the labels based on the average power spectrum
+    labels = (avg_power_spectrum >= 0.5).float()
+
+    return labels
 
 def get_labels(path):
     # get .txt files
@@ -272,9 +336,9 @@ def read_txt_file(filename):
 
     # Compile the regular expressions
     channel_pattern = re.compile(r'Channel (\d+): (.*)      \n')
-    seizure_pattern = re.compile(r'Seizure n (\d+)')
+    seizure_pattern = re.compile(r'Seizure n.*(\d+)')
     filename_pattern = re.compile(r'File name: (.*)')
-    times_pattern = re.compile(r'.*: +(\d{2}.\d{2}.\d{2})')
+    times_pattern = re.compile(r'.*:.*(\d{2}.\d{2}.\d{2})')
 
     # Read the file line by line
     with open(filename) as f:
@@ -304,7 +368,8 @@ def read_txt_file(filename):
         if times_match:
             # The string to convert
             str_mm_ss_mm = times_match.group(1)
-
+            # replace : to .
+            str_mm_ss_mm = str_mm_ss_mm.replace(':', '.')
             # Split the string into minutes, seconds, and milliseconds
             minutes, seconds, milliseconds = str_mm_ss_mm.split(".")
 

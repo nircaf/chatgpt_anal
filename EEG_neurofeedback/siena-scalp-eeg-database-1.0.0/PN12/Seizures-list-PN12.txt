@@ -47,6 +47,8 @@ Seizure end time: 16.14.26
 
 Seizure n 2:
 File name: PN12-1.2.edf
+Registration start time: 15.51.31
+Registration end time: 18.34.25
 Seizure start time: 18.31.01
 Seizure end time: 18.32.09
 
