@@ -11,6 +11,7 @@ from torch.utils.data import Dataset, DataLoader,random_split
 import torch.nn as nn
 import torch.nn.functional as F
 from sklearn.metrics import accuracy_score
+import datetime
 
 def eeg_dft_generator(eeg_recording, window_size=1.0):
     # Convert the window size from seconds to the number of samples in the recording
@@ -247,7 +248,7 @@ def classify_eeg_dft(dft_array_dataset,n_channels,sfreq):
     model = BinaryClassifier(n_channels, n_channels*2,1).to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
 
-    num_epochs = 100
+    num_epochs = 10
     # Train the model
     for epoch in range(num_epochs):
         for x_batch, y_batch in train_dataloader:
@@ -273,11 +274,10 @@ def classify_eeg_dft(dft_array_dataset,n_channels,sfreq):
             probs=np.exp(answer.cpu().detach().numpy())
             # Calculate the accuracy of the model
             preds = probs.argmax(axis = -1)
-            acc=accuracy_score(y_test, preds)
-            print(acc)
+            acc=accuracy_score(y_test.cpu().detach().numpy(), preds)
             results.append(acc)
     print('mean accuracy:',np.mean(results))
-    torch.save(model, r'saved_models')
+    torch.save(model, r'saved_models/{}model.pt'.format(datetime.datetime.now().strftime("%Y_%m_%d")))
     return model
 
 
