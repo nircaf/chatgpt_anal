@@ -12,6 +12,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from sklearn.metrics import accuracy_score
 import datetime
+import os
 
 def eeg_dft_generator(eeg_recording, window_size=1.0):
     # Convert the window size from seconds to the number of samples in the recording
@@ -385,15 +386,54 @@ def read_txt_file(filename):
 
     return channels, seizures
 
+def anomaly_detection(data):
+  # Convert the data to a tensor
+  data = torch.tensor(data).to(torch.float32)
+
+  # Define the dimensions of the input and hidden layers
+  input_dim = data.shape[1]
+  hidden_dim = int(input_dim / 2)
+
+  # Define the autoencoder model
+  autoencoder = torch.nn.Sequential(
+      torch.nn.Linear(input_dim, hidden_dim),
+      torch.nn.ReLU(),
+      torch.nn.Linear(hidden_dim, input_dim),
+      torch.nn.Sigmoid()
+  )
+
+  # Define the loss function and optimizer
+  criterion = torch.nn.MSELoss()
+  optimizer = torch.optim.Adam(autoencoder.parameters())
+
+  # Train the autoencoder
+  for epoch in range(200):
+    # Forward pass
+    output = autoencoder(data)
+    loss = criterion(output, data)
+
+    # Backward pass and optimize
+    optimizer.zero_grad()
+    loss.backward()
+    optimizer.step()
+    print("Epoch {} - Loss: {:.4f}".format(epoch, loss.detach().item()))
+
+
+  # Calculate the reconstruction error for each sample
+  error = torch.mean((output - data) ** 2, dim=1)
+
+  # Identify the samples with the highest reconstruction error as anomalies
+  anomalies = torch.where(error > error.mean() + 2 * error.std())
+  torch.save(autoencoder, r'saved_models/{}model.pt'.format(datetime.datetime.now().strftime("%Y_%m_%d")))
+
+  # Return the anomalies as a list of indices
+  return anomalies.tolist()
+
 if __name__ == '__main__':
     # Use the GPU if it's available
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-
-    import os
-
     # Set the directory where you want to start the search
     start_dir = "EEG_neurofeedback"
-
     # Loop through all directories and subdirectories in the start directory
     for root, dirs, files in os.walk(start_dir):
         # Check if the current directory contains both a .edf and .txt file
