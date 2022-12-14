@@ -1,6 +1,5 @@
 import glob
 import matplotlib.pyplot as plt
-
 import torch
 import numpy as np
 import numpy as np
@@ -13,6 +12,8 @@ import torch.nn.functional as F
 from sklearn.metrics import accuracy_score
 import datetime
 import os
+import seaborn as sns
+
 
 def eeg_dft_generator(eeg_recording, window_size=1.0):
     # Convert the window size from seconds to the number of samples in the recording
@@ -387,47 +388,66 @@ def read_txt_file(filename):
     return channels, seizures
 
 def anomaly_detection(data):
-  # Convert the data to a tensor
-  data = torch.tensor(data).to(torch.float32)
+    # Convert the data to a tensor
+    data = torch.tensor(data).to(torch.float32)
 
-  # Define the dimensions of the input and hidden layers
-  input_dim = data.shape[1]
-  hidden_dim = int(input_dim / 2)
+    # Define the dimensions of the input and hidden layers
+    input_dim = data.shape[1]
+    hidden_dim = int(input_dim / 2)
 
-  # Define the autoencoder model
-  autoencoder = torch.nn.Sequential(
-      torch.nn.Linear(input_dim, hidden_dim),
-      torch.nn.ReLU(),
-      torch.nn.Linear(hidden_dim, input_dim),
-      torch.nn.Sigmoid()
-  )
+    # Define the autoencoder model
+    autoencoder = torch.nn.Sequential(
+        torch.nn.Linear(input_dim, hidden_dim),
+        torch.nn.ReLU(),
+        torch.nn.Linear(hidden_dim, input_dim),
+        torch.nn.Sigmoid()
+    )
 
-  # Define the loss function and optimizer
-  criterion = torch.nn.MSELoss()
-  optimizer = torch.optim.Adam(autoencoder.parameters())
+    # Define the loss function and optimizer
+    criterion = torch.nn.MSELoss()
+    optimizer = torch.optim.Adam(autoencoder.parameters())
 
-  # Train the autoencoder
-  for epoch in range(200):
-    # Forward pass
-    output = autoencoder(data)
-    loss = criterion(output, data)
+    # Train the autoencoder
+    for epoch in range(20):
+        # Forward pass
+        output = autoencoder(data)
+        loss = criterion(output, data)
 
-    # Backward pass and optimize
-    optimizer.zero_grad()
-    loss.backward()
-    optimizer.step()
-    print("Epoch {} - Loss: {:.4f}".format(epoch, loss.detach().item()))
+        # Backward pass and optimize
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
+        print("Epoch {} - Loss: {:.4f}".format(epoch, loss.detach().item()))
 
 
-  # Calculate the reconstruction error for each sample
-  error = torch.mean((output - data) ** 2, dim=1)
+    # Calculate the reconstruction error for each sample
+    error = torch.mean((output - data) ** 2, dim=1)
+    print(f'reconstruction error: {torch.mean(error).item()}')
+    # Identify the samples with the highest reconstruction error as anomalies
+    anomalies = torch.where(error > error.mean() + 2 * error.std())
+    torch.save(autoencoder, r'saved_models/{}model.pt'.format(datetime.datetime.now().strftime("%Y_%m_%d")))
+    # plot anomalies
 
-  # Identify the samples with the highest reconstruction error as anomalies
-  anomalies = torch.where(error > error.mean() + 2 * error.std())
-  torch.save(autoencoder, r'saved_models/{}model.pt'.format(datetime.datetime.now().strftime("%Y_%m_%d")))
+    # Take the mean of the data along the columns
+    mean_data = data.mean(axis=1)
+    # arary of zeros with the same shape as mean_data
+    anomal_indices = np.zeros(mean_data.shape)
+    # put one where anomalies[0].tolist()
+    anomal_indices[anomalies[0].tolist()] = 1
+    # Create a scatter plot of the data and color anomal_indices differently
+    # plt.scatter(range(data.shape[0]), mean_data, c=anomal_indices)
 
-  # Return the anomalies as a list of indices
-  return anomalies.tolist()
+    # Create a scatter plot of the data and color anomal_indices differently
+    sns.scatterplot(x=range(data.shape[0]),y= mean_data, hue=anomal_indices)
+    # Set the path to the "Nir_figures" folder
+    path = os.path.join("Nir_figures")
+    # Create the "Nir_figures" folder if it does not exist
+    if not os.path.exists(path):
+        os.makedirs(path)
+    # Save the figure in the "Nir_figures" folder
+    plt.savefig(os.path.join(path, "figure.png"))
+    # Return the anomalies as a list of indices
+    return anomalies[0].tolist()
 
 if __name__ == '__main__':
     # Use the GPU if it's available
