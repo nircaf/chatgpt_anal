@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from vmdpy import VMD
 
 def main(f,T,fs):
-    
+
     t = np.arange(1,T+1)/T
     freqs = 2*np.pi*(t-0.5-fs)/(fs)
     # center frequencies of components
