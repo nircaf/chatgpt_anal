@@ -13,7 +13,7 @@ from sklearn.metrics import accuracy_score
 import datetime
 import os
 import seaborn as sns
-
+import sklearn
 
 def eeg_dft_generator(eeg_recording, window_size=1.0):
     # Convert the window size from seconds to the number of samples in the recording
@@ -248,12 +248,37 @@ def classify_eeg_dft(dft_array_dataset,n_channels,sfreq):
 
     # Define the model
     model = BinaryClassifier(n_channels, n_channels*2,1).to(device)
-    optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
 
+def dataframe_to_tensor(dataframe):
+    # Convert the dataframe to a numpy array
+    data = dataframe.values
+    # Convert the numpy array to a FloatTensor torch tensor
+    data = torch.from_numpy(data).float()
+    return data
+
+def run_torch_model(model,x_data,y_data):
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    model.to(device)
+    batch_size = 512
+    # dataframes to tensors
+    x_data = dataframe_to_tensor(x_data).to(device)
+    y_data = dataframe_to_tensor(y_data).to(device)
+    # reshape x_data to be (B,C,H,W)
+    x_data_reshape = torch.reshape(x_data,(1,1,x_data.shape[1],x_data.shape[0]))
+    optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
+    # sklearn train test split
+    data_train, data_test, target_train, target_test= sklearn.model_selection.train_test_split(x_data_reshape, y_data, test_size=0.01, random_state=1)
+    data_train, data_val, target_train, target_val = sklearn.model_selection.train_test_split(data_train, target_train, test_size=0.25, random_state=1)
+    train_dataset = EEGDataset(data_train,target_train)
+    val_dataset = EEGDataset(data_val,target_val)
+    test_dataset = EEGDataset(data_test,target_test)
+    Trainloader = DataLoader(train_dataset,batch_size)
+    Valloader = DataLoader(val_dataset,batch_size)
+    Testloader = DataLoader(test_dataset,batch_size)
     num_epochs = 10
     # Train the model
     for epoch in range(num_epochs):
-        for x_batch, y_batch in train_dataloader:
+        for x_batch, y_batch in Trainloader:
             model.train()
             # Perform a forward pass on the batch of data
             predictions = model(x_batch)
@@ -270,7 +295,7 @@ def classify_eeg_dft(dft_array_dataset,n_channels,sfreq):
     model.eval()
     results = []
     with torch.no_grad():
-        for j, data in enumerate(test_dataloader, 0):
+        for j, data in enumerate(Valloader, 0):
             x_test, y_test = data
             answer = model(x_test.cuda())
             probs=np.exp(answer.cpu().detach().numpy())

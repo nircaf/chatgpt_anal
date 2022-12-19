@@ -10,6 +10,7 @@ import pyod_ano_det
 import vmdpy_run
 import eegnet
 import examples_deap_ccnn
+from Models_scripts.from_1D_to_3D_pipeline_NN import *
 
 def run():
     # Set the directory where you want to start the search
@@ -37,6 +38,7 @@ def run():
                 eeg_recording = mne.io.read_raw_edf(filename)
                 raw_recording,labels = org_func(eeg_recording,seizures) # eeg_dft_array
                 if org_func == eeg_dft_array:
+                    # x_data = (T,C)
                     x_data = pd.concat([x_data,raw_recording.T])
                     y_data = pd.concat([y_data,pd.DataFrame(labels)])
                     # run over x_data columns
@@ -47,16 +49,23 @@ def run():
     x_data = x_data.dropna(axis=1, how='any')
     # % of sum of y data
     print(100*y_data.sum()/len(y_data))
-    examples_deap_ccnn.run(EEGDataset(x_data,y_data))
+    model = SleepStagerChambon2018_with_gru(eeg_recording.info['nchan'], eeg_recording.info['sfreq'], n_classes=2)
+    # x_data to (C,T)
+    run_torch_model(model,x_data,y_data)
+    # sklearn train test split
+    data_train, data_test, target_train, target_test= sklearn.model_selection.train_test_split(x_data, y_data, test_size=0.2, random_state=1)
+    data_train, data_val, target_train, target_val = sklearn.model_selection.train_test_split(data_train, target_train, test_size=0.25, random_state=1)
+    dataset_trian = EEGDataset(data_train,target_train)
+    dataset_val = EEGDataset(data_val,target_val)
+    dataset_test = EEGDataset(data_test,target_test)
+    # examples_deap_ccnn.run(EEGDataset(x_data,y_data))
     # kerasmodels.ResNet(x_data)
     # kerasmodels.run_keras(x_data, y_data, channelnum=45, sf=521, nb_classes=1)
     # train with torch
     # dft_array_dataset = prep_seizures_data_labels(x_data.T, y_data)
     # classify_eeg_dft(dft_array_dataset, eeg_recording.info['nchan'], eeg_recording.info['sfreq'])
-    # sklearn train test split
-    data_train, data_test, target_train, target_test= sklearn.model_selection.train_test_split(x_data, y_data, test_size=0.2, random_state=1)
-    data_train, data_val, target_train, target_val = sklearn.model_selection.train_test_split(data_train, target_train, test_size=0.25, random_state=1)
-    # eegnet.eeg_net_run(eeg_recording, data_train,target_train,data_val,target_val,data_test,target_test)
+
+    eegnet.eeg_net_run(eeg_recording, data_train,target_train,data_val,target_val,data_test,target_test)
     anomaly_detection(x_data.to_numpy())
     pyod_ano_det.main(data_train, data_test, target_train, target_test)
     lgbm.ensemble_model(data_train, data_test, target_train, target_test)
