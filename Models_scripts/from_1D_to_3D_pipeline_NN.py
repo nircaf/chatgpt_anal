@@ -947,8 +947,9 @@ class SleepStagerChambon2018(nn.Module):
         input_size = int(input_size_s * sfreq)
         pad_size = time_conv_size // 2
         self.n_channels = n_channels
-        len_last_layer = self._len_last_layer(
-            n_channels, input_size, max_pool_size, n_conv_chs)
+        len_last_layer = n_channels**2
+        # len_last_layer = self._len_last_layer(
+        #     n_channels, input_size, max_pool_size, n_conv_chs)
 
         self.BN = nn.BatchNorm2d(1)
 
@@ -995,7 +996,7 @@ class SleepStagerChambon2018(nn.Module):
             x = x.transpose(1, 2)
 
         x = self.feature_extractor(x)
-        return self.fc(x.flatten(start_dim=1))
+        return self.fc(x.flatten(start_dim=1)) # n_channels * (input_size // (max_pool_size ** 2)) * n_conv_chs
 
 
 class SleepStagerChambon2018_domain_adaptation(nn.Module):

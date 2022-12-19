@@ -259,12 +259,12 @@ def dataframe_to_tensor(dataframe):
 def run_torch_model(model,x_data,y_data):
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     model.to(device)
-    batch_size = 512
+    batch_size = 128
     # dataframes to tensors
     x_data = dataframe_to_tensor(x_data).to(device)
     y_data = dataframe_to_tensor(y_data).to(device)
     # reshape x_data to be (B,C,H,W)
-    x_data_reshape = torch.reshape(x_data,(1,1,x_data.shape[1],x_data.shape[0]))
+    x_data_reshape = torch.reshape(x_data,(x_data.shape[0],x_data.shape[1],1))
     optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
     # sklearn train test split
     data_train, data_test, target_train, target_test= sklearn.model_selection.train_test_split(x_data_reshape, y_data, test_size=0.01, random_state=1)

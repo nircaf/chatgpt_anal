@@ -1100,7 +1100,7 @@ def eeg_net_run(eeg_recording,X_train,Y_train,X_validate, Y_validate,X_test,Y_te
     n_epoch =11
     # configure the EEGNet-8,2,16 model with kernel length of 32 samples (other
     # model configurations may do better, but this is a good starting point)
-    model = EEGNet(nb_classes = 4, Chans = channelnum, Samples =samples ,
+    model = EEGNet(nb_classes = 2, Chans = channelnum, Samples =samples ,
                 dropoutRate = 0.5, kernLength = 32, F1 = 8, D = 2, F2 = 16,
                 dropoutType = 'Dropout')
 

@@ -49,9 +49,12 @@ def run():
     x_data = x_data.dropna(axis=1, how='any')
     # % of sum of y data
     print(100*y_data.sum()/len(y_data))
-    model = SleepStagerChambon2018_with_gru(eeg_recording.info['nchan'], eeg_recording.info['sfreq'], n_classes=2)
-    # x_data to (C,T)
-    run_torch_model(model,x_data,y_data)
+    models = [SleepStagerChambon2018,SleepStagerChambon2018_domain_adaptation,SleepStagerChambon2018_transfer_learning,SleepStagerChambon2018_fusion,
+    SleepStagerChambon2018_super_unsuper_vised,SleepStagerChambon2018_with_unsupervides,SleepStagerChambon2018_deeper,SleepStagerChambon2018_with_gru,
+    SleepStagerChambon2018_with_esn,SleepStagerChambon2018_with_esn_EchoTorch,SleepStagerChambon2018_ud,SleepStagerChambon2018_regression,SleepStagerChambon2018_UD]
+    for model_run in models:
+        model = model_run(x_data.shape[1], eeg_recording.info['sfreq'], n_classes=1)
+        run_torch_model(model,x_data,y_data)
     # sklearn train test split
     data_train, data_test, target_train, target_test= sklearn.model_selection.train_test_split(x_data, y_data, test_size=0.2, random_state=1)
     data_train, data_val, target_train, target_val = sklearn.model_selection.train_test_split(data_train, target_train, test_size=0.25, random_state=1)
