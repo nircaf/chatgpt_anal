@@ -34,7 +34,8 @@ from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 import pickle
 import os
 from sklearn.model_selection import GridSearchCV
-
+import glob
+import re
 subplot_num = 3
 ranodm_state = 42
 n_estimators = 2000
@@ -180,8 +181,18 @@ def ensemble_model(x_train, x_test, y_train, y_test, args = None):
     plot_all_models(Model,cv)
     # save model to file
     cv = np.where(np.isnan(cv), 0, cv) # replace nan with 0
-    pickle.dump(models[np.argmax(cv)][-1] , open(os.path.join('saved_models',
-        'model_exp'  + '.pickle'), 'wb'))
+    iftosave = False
+    # get accuracy of model that ran before
+    # get file name m_acc in saved_models folder
+    filename = glob.glob('saved_models/m_acc*')[0]
+    # get number form filename
+    num = float(re.findall(r'\d+.\d+', filename)[0])
+    if num < max(cv):
+        iftosave = True
+    if iftosave:
+        new_filename = 'm_acc_' + str(max(cv))+'_' +'_'.join(x_train.columns.values)  + '.pickle'
+        pickle.dump(models[np.argmax(cv)][-1] , open(os.path.join('saved_models',
+            new_filename), 'wb'))
 
 
 

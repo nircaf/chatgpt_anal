@@ -2,7 +2,6 @@ import glob
 import matplotlib.pyplot as plt
 import torch
 import numpy as np
-import numpy as np
 from scipy.fftpack import dct
 import mne
 import re
@@ -14,6 +13,7 @@ import datetime
 import os
 import seaborn as sns
 import sklearn
+import pandas as pd
 
 def eeg_dft_generator(eeg_recording, window_size=1.0):
     # Convert the window size from seconds to the number of samples in the recording
@@ -31,10 +31,12 @@ def seizures_start_time_arr(seizures,dict_key='Seizure start time'):
         arr.append(seizures[i][dict_key])
     return np.array(arr)
 
-def seizures_start_time(seizures,dict_key='Seizure start time'):
+def seizures_start_time(seizures,filename,dict_key='Seizure start time'):
     df = pd.DataFrame()
     for i in seizures:
-        df = pd.concat([df,pd.Series(seizures[i][dict_key])])
+        # get from seizures only filename dict
+        if filename in seizures[i].values():
+            df = pd.concat([df,pd.Series(seizures[i][dict_key])])
     # remove duplicates
     return df.drop_duplicates().to_numpy()
 
@@ -68,8 +70,7 @@ def eeg_dft_array_w_fft(eeg_recording,seizures, window_size=1.0):
     dft_array_dataset = EEGDataset(dft_array, labels)
     return dft_array, labels
 
-import pandas as pd
-def eeg_dft_array(eeg_recording,seizures, window_size=1.0):
+def eeg_dft_array(eeg_recording,seizures,filename, window_size=1.0):
     # Convert the window size from seconds to the number of samples in the recording
     window_size_samples = int(window_size * eeg_recording.info['sfreq'])
     batch_size = eeg_recording._raw_lengths[0] // window_size_samples
@@ -79,20 +80,24 @@ def eeg_dft_array(eeg_recording,seizures, window_size=1.0):
     # get raw data index to channel names
     raw_data = pd.DataFrame(eeg_recording.get_data(),index = eeg_recording.ch_names)
     # seizure start and end time array
-    seizures_start_time_arr = seizures_start_time(seizures)*eeg_recording.info['sfreq']
-    seizures_end_time_arr = seizures_start_time(seizures,dict_key='Seizure end time')*eeg_recording.info['sfreq']
+    seizures_start_time_arr = seizures_start_time(seizures,filename)*eeg_recording.info['sfreq']
+    seizures_end_time_arr = seizures_start_time(seizures,filename,dict_key='Seizure end time')*eeg_recording.info['sfreq']
     # Registration start and end time array
-    registration_start_time_arr = seizures_start_time(seizures,dict_key='Registration start time')*eeg_recording.info['sfreq']
-    registration_end_time_arr = seizures_start_time(seizures,dict_key='Registration end time')*eeg_recording.info['sfreq']
+    # registration_start_time_arr = seizures_start_time(seizures,dict_key='Registration start time')*eeg_recording.info['sfreq']
+    # registration_end_time_arr = seizures_start_time(seizures,dict_key='Registration end time')*eeg_recording.info['sfreq']
     # get raw_data of registration time
     seizures_data = pd.DataFrame(index = eeg_recording.ch_names)
-    for i in range(len(registration_start_time_arr)):
-        seizures_data = pd.concat([seizures_data,raw_data.iloc[:,int(registration_start_time_arr[i][0]):int(registration_end_time_arr[i][0])]],ignore_index=True,axis=1)
+    for i in range(len(seizures_start_time_arr)):
+        # get raw_data time equal to half of the seizure time from before and half of the seizure time from after
+        start_index = max([0,int(seizures_start_time_arr[i][0] - (seizures_end_time_arr[i][0] - seizures_start_time_arr[i][0])/2)])
+        end_index = min([len(raw_data.columns),int(seizures_end_time_arr[i][0] + (seizures_end_time_arr[i][0] - seizures_start_time_arr[i][0])/2)])
+        seizures_data = pd.concat([seizures_data,raw_data.iloc[:,start_index:end_index]],ignore_index=True,axis=1)
     labels = np.zeros(seizures_data.shape[1], dtype=np.int64)
     # set labels to 1 for seizure time
-    zero_index_location = min(registration_start_time_arr)[0]
     for i in range(len(seizures_start_time_arr)):
-        labels[int(seizures_start_time_arr[i][0]-zero_index_location):int(seizures_end_time_arr[i][0]-zero_index_location)] = 1
+        start_index = max([0,int(seizures_start_time_arr[i][0] - (seizures_end_time_arr[i][0] - seizures_start_time_arr[i][0])/2)])
+        labels[int(seizures_start_time_arr[i][0]-start_index):int(seizures_end_time_arr[i][0]-start_index)] = 1
+    print(sum(labels)/seizures_data.shape[1]) if seizures_data.shape[1] != 0 else print(0)
     # unsqueeze the dft_array to add a channel dimension
     return seizures_data, labels
 
@@ -275,7 +280,7 @@ def run_torch_model(model,x_data,y_data):
     Trainloader = DataLoader(train_dataset,batch_size)
     Valloader = DataLoader(val_dataset,batch_size)
     Testloader = DataLoader(test_dataset,batch_size)
-    num_epochs = 10
+    num_epochs = 100
     # Train the model
     for epoch in range(num_epochs):
         for x_batch, y_batch in Trainloader:
@@ -304,7 +309,7 @@ def run_torch_model(model,x_data,y_data):
             acc=accuracy_score(y_test.cpu().detach().numpy(), preds)
             results.append(acc)
     print('mean accuracy:',np.mean(results))
-    torch.save(model, r'saved_models/{}model.pt'.format(datetime.datetime.now().strftime("%Y_%m_%d")))
+    # torch.save(model, r'saved_models/{}model.pt'.format(datetime.datetime.now().strftime("%Y_%m_%d")))
     return model
 
 

@@ -37,7 +37,7 @@ Channel 34: Fp2
 
 
 Seizure n 1:
-File name: PN11-.edf
+File name: PN11-1.edf
 Registration start time: 11.31.25
 Registration end time: 13.56.02
 Seizure start time: 13.37.19
