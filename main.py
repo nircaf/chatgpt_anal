@@ -70,10 +70,18 @@ def run():
     # train with torch
     # dft_array_dataset = prep_seizures_data_labels(x_data.T, y_data)
     # classify_eeg_dft(dft_array_dataset, eeg_recording.info['nchan'], eeg_recording.info['sfreq'])
+    # write columns to csv time,model, x_train columns, max(cv)
+    with open('saved_models/models.csv', 'w') as f:
+        f.write('time,model,electrodes_comb,accuracy\n')
+    # read saved_models/models.csv
+    models = pd.read_csv('saved_models/models.csv')
     # run over number of features
     for i in range(1, x_data.shape[1]):
         for comb in combinations(x_data.columns, i):
-            print(f'features: {comb}')
+            # if comb in models
+            if comb in models['electrodes_comb'].values:
+                # skip
+                continue
             # get combination of features
             lgbm.ensemble_model(data_train[list(comb)], data_test[list(comb)], target_train, target_test)
 

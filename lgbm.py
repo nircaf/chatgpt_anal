@@ -14,7 +14,7 @@ from sklearn.model_selection import KFold
 from sklearn.metrics import confusion_matrix
 from sklearn.metrics import classification_report
 from xgboost import XGBClassifier
-import xgboost
+import xgboost,datetime
 import lightgbm as lgb
 import pandas as pd
 import numpy as np
@@ -138,49 +138,31 @@ def ensemble_model(x_train, x_test, y_train, y_test, args = None):
     models.append(('MLPClassifier', MLPClassifier(solver='lbfgs', alpha=1e-5,
                      hidden_layer_sizes=(5, 2), random_state=1)))
     models.append(('catboost', CatBoostClassifier(
+        verbose = 0,
         iterations=5,
         learning_rate=0.1,
         # loss_function='CrossEntropy'
         )))
-    # models.append(('LGBMClassifier', lgb.LGBMClassifier(num_leaves=12,
-    #                                                     learning_rate=0.01,
-    #                                                     n_estimators=5000,
-    #                                                     objective='multiclass',
-    #                                                     class_weight=class_weights
-    #                                                     )))
-
+    models.append(('LGBMClassifier', lgb.LGBMClassifier()))
     # --------------------------------------------------------------------
     Model = []
     score = []
     cv = []
     for name, model in models:
-        print('*****************', name, '*******************')
-        print('\n')
         Model.append(name)
         model.fit(np.array(x_train,dtype=np.float), np.array(y_train,dtype=np.int))
-        print(model)
         pre = model.predict( np.array(x_test,dtype=np.float))
-        print('\n')
         AS = accuracy_score( np.array(y_test,dtype=np.int), pre)
-        print('Accuracy_score  -', AS)
         score.append(AS*100)
-        print('\n')
         sc = cross_val_score(model, x_test, y_test, cv=10,
                              scoring='accuracy').mean()
-        print('cross_val_score  -', sc)
         cv.append(sc*100)
-        print('\n')
-        print('classification report\n', classification_report(np.array(y_test,dtype=np.int), pre))
-        print('\n')
         cm = confusion_matrix(np.array(y_test,dtype=np.int), pre)
-        print(cm)
-        print('\n')
-        plt.figure(figsize=(10, 40))
-        plt.subplot(911)
-        plt.title(f'{name} accuracy cross val: {sc*100}%')
-    plot_all_models(Model,cv)
     # save model to file
     cv = np.where(np.isnan(cv), 0, cv) # replace nan with 0
+    # write to csv time,model, x_train columns, max(cv)
+    with open('saved_models/models.csv', 'a') as f:
+        f.write(','.join([str(datetime.datetime.now()),Model[np.argmax(cv)],'_'.join(x_train.columns.values),str(max(cv))]) + '\n')
     iftosave = False
     # get accuracy of model that ran before
     # get file name m_acc in saved_models folder
