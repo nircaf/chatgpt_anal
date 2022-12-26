@@ -100,13 +100,6 @@ def set_params(x_train, x_test, y_train, y_test,model = None,args= None):
     # model.set_params(**params)
     return params
 
-def ensemble_model_all(X_train, X_test, y_train, y_test):
-    # Fit all models
-    clf = LazyClassifier(verbose=0, custom_metric = None)
-    models, predictions = clf.fit(np.array(X_train,dtype=np.float), np.array(X_test,dtype=np.float)
-        , np.array(y_train,dtype=np.int), np.array(y_test,dtype=np.int))
-    print(models)
-    plot_all_models(models,lazy = True)
 
 def ensemble_model(x_train, x_test, y_train, y_test, args = None):
     knn = KNeighborsClassifier()
@@ -121,10 +114,8 @@ def ensemble_model(x_train, x_test, y_train, y_test, args = None):
     # -------------------------------------------------------------------
     models = []
     models.append(('KNeighborsClassifier', knn))
-    models.append(('SVC', svc))
     models.append(('LogisticRegression', lr))
     models.append(('DecisionTreeClassifier', dt))
-    models.append(('GaussianNB', gnb))
     models.append(('RandomForestClassifier', rfc))
     models.append(('XGBClassifier', xgb))
     models.append(('GradientBoostingClassifier', gbc))
@@ -132,8 +123,6 @@ def ensemble_model(x_train, x_test, y_train, y_test, args = None):
     models.append(('BernoulliNB', BernoulliNB()))
 
     models.append(('SGDClassifier', SGDClassifier()))
-    models.append(('LogisticRegression', LogisticRegression(multi_class="multinomial")))
-    models.append(('RidgeClassifier', RidgeClassifier()))
     models.append(('LDA', LinearDiscriminantAnalysis()))
     models.append(('MLPClassifier', MLPClassifier(solver='lbfgs', alpha=1e-5,
                      hidden_layer_sizes=(5, 2), random_state=1)))
@@ -214,12 +203,7 @@ def ensemble_model_grid_search(x_train, x_test, y_train, y_test):
     models.append(('XGBClassifier', xgb))
     models.append(('GradientBoostingClassifier', gbc))
     models.append(('AdaBoostClassifier', ada))
-    models.append(('LGBMClassifier', lgb.LGBMClassifier(num_leaves=12,
-                                                        learning_rate=0.01,
-                                                        n_estimators=5000,
-                                                        objective='multiclass',
-                                                        class_weight=class_weights
-                                                        )))
+    models.append(('LGBMClassifier', lgb.LGBMClassifier()))
 
     # --------------------------------------------------------------------
     Model = []
