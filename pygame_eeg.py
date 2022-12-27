@@ -100,7 +100,9 @@ def send_number_to_port(port):
 
 if __name__ == "__main__":
     port = 8000
-    os.environ["SDL_VIDEODRIVER"] = "dummy"
+    # if you are running on linux, you may need to set the SDL_VIDEODRIVER environment variable to "dummy"
+    if os.name == "posix":
+        os.environ["SDL_VIDEODRIVER"] = "dummy"
     # get main_game running in a separate process
     p = multiprocessing.Process(target=main_game, args=(port,))
     p.start()
