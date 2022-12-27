@@ -1,5 +1,5 @@
 #!/bin/bash
-pre-commit run --all-files
+for i in {1..4};do pre-commit run --all-files;done
 read MESSAGE
 git pull
 git add .
