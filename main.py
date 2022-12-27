@@ -64,7 +64,7 @@ def run():
     dataset_trian = EEGDataset(data_train,target_train)
     dataset_val = EEGDataset(data_val,target_val)
     dataset_test = EEGDataset(data_test,target_test)
-    # examples_deap_ccnn.run(EEGDataset(x_data,y_data))
+    examples_deap_ccnn.tpot_train(data_train, data_test, target_train, target_test)
     # kerasmodels.ResNet(x_data)
     # kerasmodels.run_keras(x_data, y_data, channelnum=45, sf=521, nb_classes=1)
     # train with torch
