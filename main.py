@@ -12,6 +12,7 @@ import eegnet
 import examples_deap_ccnn
 from Models_scripts.from_1D_to_3D_pipeline_NN import *
 from itertools import combinations
+import tpot_digits_pipeline
 
 def run():
     # Set the directory where you want to start the search
@@ -64,7 +65,8 @@ def run():
     dataset_trian = EEGDataset(data_train,target_train)
     dataset_val = EEGDataset(data_val,target_val)
     dataset_test = EEGDataset(data_test,target_test)
-    examples_deap_ccnn.tpot_train(data_train, data_test, target_train, target_test)
+    # tpot_digits_pipeline.tpot_train(data_train, data_test, target_train, target_test)
+    examples_deap_ccnn.h2o_train(data_train, data_test, target_train, target_test)
     # kerasmodels.ResNet(x_data)
     # kerasmodels.run_keras(x_data, y_data, channelnum=45, sf=521, nb_classes=1)
     # train with torch

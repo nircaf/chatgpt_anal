@@ -371,7 +371,7 @@ def read_txt_file(filename):
     seizure_pattern = re.compile(r'Seizure n.*(\d+)')
     filename_pattern = re.compile(r'File name: (.*)')
     times_pattern = re.compile(r'.*:.*(\d{2}.\d{2}.\d{2})')
-
+    times_pattern2 = re.compile(r'.*:.*(\d+).*seconds')
     # Read the file line by line
     with open(filename) as f:
         lines = f.readlines()
@@ -414,6 +414,25 @@ def read_txt_file(filename):
             seconds_float = minutes * 60 + seconds + milliseconds / 100
             # Parse a line with the registration and seizure times
             seizures[seizure_number][line.split(':')[0]] = seconds_float
+        else:
+            times_match2 = times_pattern2.match(line)
+            if times_match2:
+                # The string to convert
+                str_mm_ss_mm = times_match2.group(1)
+                # replace : to .
+                str_mm_ss_mm = str_mm_ss_mm.replace(':', '.')
+                # Split the string into minutes, seconds, and milliseconds
+                minutes, seconds, milliseconds = str_mm_ss_mm.split(".")
+
+                # Convert the minutes, seconds, and milliseconds to integers
+                minutes = int(minutes)
+                seconds = int(seconds)
+                milliseconds = int(milliseconds)
+
+                # Calculate the value in seconds as a float
+                seconds_float = minutes * 60 + seconds + milliseconds / 100
+                # Parse a line with the registration and seizure times
+                seizures[seizure_number][line.split(':')[0]] = seconds_float
 
     return channels, seizures
 
