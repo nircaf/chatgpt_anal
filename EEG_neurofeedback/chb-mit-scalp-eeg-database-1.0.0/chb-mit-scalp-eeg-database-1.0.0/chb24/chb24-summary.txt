@@ -94,3 +94,4 @@ File Name: chb24_21.edf
 Number of Seizures in File: 1
 Seizure Start Time: 2804 seconds
 Seizure End Time: 2872 seconds
+

@@ -37,7 +37,7 @@ def run():
 
             # Load each .edf file and process it using the eeg_dft_array and classify_eeg_dft functions
             for filename in filenames:
-                eeg_recording = mne.io.read_raw_edf(filename)
+                eeg_recording = mne.io.read_raw_edf(filename,verbose=0,preload=True)
                 raw_recording,labels = org_func(eeg_recording,seizures,filename.split('/')[-1]) # eeg_dft_array
                 if org_func == eeg_dft_array:
                     # x_data = (T,C)

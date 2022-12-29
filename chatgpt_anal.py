@@ -34,9 +34,13 @@ def seizures_start_time_arr(seizures,dict_key='Seizure start time'):
 def seizures_start_time(seizures,filename,dict_key='Seizure start time'):
     df = pd.DataFrame()
     for i in seizures:
+        # get the name from filename path for linux and windows with os
+        filenam = os.path.basename(filename)
         # get from seizures only filename dict
-        if filename in seizures[i].values():
-            df = pd.concat([df,pd.Series(seizures[i][dict_key])])
+        if filenam in seizures[i].values():
+            for key in seizures[i]:
+                if dict_key.lower() in key.lower():
+                    df = pd.concat([df,pd.Series(seizures[i][key])])
     # remove duplicates
     return df.drop_duplicates().to_numpy()
 
@@ -367,11 +371,11 @@ def read_txt_file(filename):
     seizures = {}
 
     # Compile the regular expressions
-    channel_pattern = re.compile(r'Channel (\d+): (.*)      \n')
+    channel_pattern = re.compile(r'Channel (\d+): (.*).*\n')
     seizure_pattern = re.compile(r'Seizure n.*(\d+)')
-    filename_pattern = re.compile(r'File name: (.*)')
+    filename_pattern = re.compile(r'File Name: (.*).*\n')
     times_pattern = re.compile(r'.*:.*(\d{2}.\d{2}.\d{2})')
-    times_pattern2 = re.compile(r'.*:.*(\d+).*seconds')
+    times_pattern2 = re.compile(r'.*:.*(\d{4}).*seconds')
     # Read the file line by line
     with open(filename) as f:
         lines = f.readlines()
@@ -384,6 +388,7 @@ def read_txt_file(filename):
             channel_number = int(channel_match.group(1))
             channel_name = channel_match.group(2)
             channels[channel_number] = channel_name
+            continue
 
         seizure_match = seizure_pattern.match(line)
         if seizure_match:
@@ -391,10 +396,16 @@ def read_txt_file(filename):
             seizure_number = int(seizure_match.group(1))
             seizures[seizure_number] = {}
 
+
         filename_match = filename_pattern.match(line)
         if filename_match:
             # Parse a line with the filename
-            seizures[seizure_number]['filename'] = filename_match.group(1)
+            filenam = filename_match.group(1)
+            # find number after _ in filename using re
+            seizure_number = int(re.findall(r'_(\d+)', filenam)[0])
+            # seizure_number = int(filenam.split('_')[-1].split('.')[0])
+            seizures[seizure_number] = {}
+            seizures[seizure_number]['filename'] = filenam
 
         times_match = times_pattern.match(line)
         if times_match:
@@ -417,24 +428,10 @@ def read_txt_file(filename):
         else:
             times_match2 = times_pattern2.match(line)
             if times_match2:
-                # The string to convert
-                str_mm_ss_mm = times_match2.group(1)
-                # replace : to .
-                str_mm_ss_mm = str_mm_ss_mm.replace(':', '.')
-                # Split the string into minutes, seconds, and milliseconds
-                minutes, seconds, milliseconds = str_mm_ss_mm.split(".")
-
-                # Convert the minutes, seconds, and milliseconds to integers
-                minutes = int(minutes)
-                seconds = int(seconds)
-                milliseconds = int(milliseconds)
-
-                # Calculate the value in seconds as a float
-                seconds_float = minutes * 60 + seconds + milliseconds / 100
                 # Parse a line with the registration and seizure times
-                seizures[seizure_number][line.split(':')[0]] = seconds_float
-
+                seizures[seizure_number][line.split(':')[0]] = int(times_match2.group(1))
     return channels, seizures
+
 
 def anomaly_detection(data):
     # Convert the data to a tensor
