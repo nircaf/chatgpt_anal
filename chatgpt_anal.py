@@ -101,7 +101,8 @@ def eeg_dft_array(eeg_recording,seizures,filename, window_size=1.0):
     for i in range(len(seizures_start_time_arr)):
         start_index = max([0,int(seizures_start_time_arr[i][0] - (seizures_end_time_arr[i][0] - seizures_start_time_arr[i][0])/2)])
         labels[int(seizures_start_time_arr[i][0]-start_index):int(seizures_end_time_arr[i][0]-start_index)] = 1
-    print(sum(labels)/seizures_data.shape[1]) if seizures_data.shape[1] != 0 else print(0)
+    # print percentage of seizure time
+    # print(sum(labels)/seizures_data.shape[1]) if seizures_data.shape[1] != 0 else print(0)
     # unsqueeze the dft_array to add a channel dimension
     return seizures_data, labels
 
@@ -373,7 +374,7 @@ def read_txt_file(filename):
     # Compile the regular expressions
     channel_pattern = re.compile(r'Channel (\d+): (.*).*\n')
     seizure_pattern = re.compile(r'Seizure n.*(\d+)')
-    filename_pattern = re.compile(r'File Name: (.*).*\n')
+    filename_pattern = re.compile(r'File \Same: (.*).*\n')
     times_pattern = re.compile(r'.*:.*(\d{2}.\d{2}.\d{2})')
     times_pattern2 = re.compile(r'.*:.*(\d{4}).*seconds')
     # Read the file line by line
@@ -402,7 +403,7 @@ def read_txt_file(filename):
             # Parse a line with the filename
             filenam = filename_match.group(1)
             # find number after _ in filename using re
-            seizure_number = int(re.findall(r'_(\d+)', filenam)[0])
+            seizure_number = int(re.findall(r'[-_](\d+)', filenam)[0])
             # seizure_number = int(filenam.split('_')[-1].split('.')[0])
             seizures[seizure_number] = {}
             seizures[seizure_number]['filename'] = filenam

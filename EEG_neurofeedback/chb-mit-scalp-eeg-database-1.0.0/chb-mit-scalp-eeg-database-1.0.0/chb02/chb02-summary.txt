@@ -212,4 +212,3 @@ File Name: chb02_35.edf
 File Start Time: 07:04:02
 File End Time: 8:04:02
 Number of Seizures in File: 0
-

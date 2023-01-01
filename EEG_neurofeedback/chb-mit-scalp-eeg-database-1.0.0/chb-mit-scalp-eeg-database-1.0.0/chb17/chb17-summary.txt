@@ -167,4 +167,3 @@ File Name: chb17c_13.edf
 File Start Time: 09:59:42
 File End Time: 10:59:42
 Number of Seizures in File: 0
-

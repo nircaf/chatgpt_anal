@@ -6,7 +6,7 @@ In this case, we introduce how to use TorchEEG to train a Continuous Convolution
 import logging
 import os
 import random
-import time
+import time,datetime
 
 import numpy as np
 import torch
@@ -31,7 +31,7 @@ import pandas as pd
 import h2o
 from h2o.automl import H2OAutoML
 from tpot import TPOTClassifier
-
+import glob,re
 def tpot_train(X_train, X_test, y_train, y_test):
     tpot = TPOTClassifier(generations=5, population_size=50, verbosity=2, random_state=42)
     tpot.fit(X_train, y_train)
@@ -44,9 +44,9 @@ def tpot_train(X_train, X_test, y_train, y_test):
 def h2o_train(X_train, X_test, y_train, y_test):
     # Start the H2O cluster (locally)
     h2o.init()
-    # change y train and test 0 to 2
-    y_train[y_train == 0] = 2
-    y_test[y_test == 0] = 2
+    # # change y train and test 0 to 2
+    # y_train[y_train == 0] = 2
+    # y_test[y_test == 0] = 2
     # concat x and y train to one df
     train = pd.concat([X_train, y_train], axis=1)
     # concat x and y test to one df
@@ -81,8 +81,18 @@ def h2o_train(X_train, X_test, y_train, y_test):
     # this is equivalent to
     m = aml.get_best_model()
     print(m)
+    accuracy = m.model_performance(test).accuracy()
+    # get file name m_acc in saved_models folder
+    filename = glob.glob('saved_models/m_acc*')[0]
+    # get number form filename
+    num = float(re.findall(r'\d+.\d+', filename)[0])
     # save the model in saved_models folder
-    h2o.save_model(model=m, path=f"{os.getcwd()}/saved_models", force=True)
+    # write to csv time,model, x_train columns, max(cv)
+    with open('saved_models/models.csv', 'a') as f:
+        f.write(','.join([str(datetime.datetime.now()),m.model_id,'_'.join(X_train.columns.values),str(round(np.mean(accuracy),3))]) + '\n')
+    if num < np.mean(accuracy):
+        save_file_name = f"{os.getcwd()}/saved_models"
+        h2o.save_model(model=m, path=save_file_name,filename=f'm_acc{round(np.mean(accuracy),3)}.pickle', force=True)
 
 def autoPyTorch_run(X_train, X_test, y_train, y_test):
     # initialise Auto-PyTorch api
